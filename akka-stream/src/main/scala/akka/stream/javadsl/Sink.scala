@@ -99,6 +99,22 @@ object Sink {
     new Sink(scaladsl.Sink.head[In])
 
   /**
+   * Sends the elements of the stream to the given `ActorRef`.
+   * If the target actor terminates the stream will be cancelled.
+   * When the stream is completed successfully the given `onCompleteMessage`
+   * will be sent to the destination actor.
+   * When the stream is completed with failure a [[akka.actor.Status.Failure]]
+   * message will be sent to the destination actor.
+   *
+   * It will request at most `maxInputBufferSize` number of elements from
+   * upstream, but there is no back-pressure signal from the destination actor,
+   * i.e. if the actor is not consuming the messages fast enough the mailbox
+   * of the actor will grow.
+   */
+  def tell[In](ref: ActorRef, onCompleteMessage: Any): Sink[In, Unit] =
+    new Sink(scaladsl.Sink.tell[In](ref, onCompleteMessage))
+
+  /**
    * A graph with the shape of a sink logically is a sink, this method makes
    * it so also in type.
    */

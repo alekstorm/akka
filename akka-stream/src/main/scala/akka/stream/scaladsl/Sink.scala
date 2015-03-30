@@ -201,4 +201,21 @@ object Sink extends SinkApply {
 
     Flow[T].transform(newOnCompleteStage).to(Sink.ignore).named("OnCompleteSink")
   }
+
+  /**
+   * Sends the elements of the stream to the given `ActorRef`.
+   * If the target actor terminates the stream will be cancelled.
+   * When the stream is completed successfully the given `onCompleteMessage`
+   * will be sent to the destination actor.
+   * When the stream is completed with failure a [[akka.actor.Status.Failure]]
+   * message will be sent to the destination actor.
+   *
+   * It will request at most `maxInputBufferSize` number of elements from
+   * upstream, but there is no back-pressure signal from the destination actor,
+   * i.e. if the actor is not consuming the messages fast enough the mailbox
+   * of the actor will grow.
+   */
+  def tell[T](ref: ActorRef, onCompleteMessage: Any): Sink[T, Unit] =
+    new Sink(new TellSink(ref, onCompleteMessage, none, shape("TellSink")))
+
 }
